@@ -4,8 +4,12 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -24,7 +28,6 @@ class MainActivity : AppCompatActivity() //, PhoneListener
         PhonesAdapter()
     }
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -35,10 +38,28 @@ class MainActivity : AppCompatActivity() //, PhoneListener
             insets
         }
 
+        val dividerDrawable = AppCompatResources.getDrawable(this , R.drawable.divider)
+        val defDivider = DividerItemDecoration(this, DividerItemDecoration.VERTICAL).apply {
+            dividerDrawable?.let { setDrawable(it) }
+        }
+        //listView.addItemDecoration(defDivider)
+        listView.addItemDecoration(CustomDecorator())
+
+        ItemTouchHelper(ItemTouchCallback()).attachToRecyclerView(listView)
+        // Отключаем скролл
+/*
+        val myLinearLayoutManager = object : LinearLayoutManager(this) {
+            override fun canScrollVertically(): Boolean {
+                return false
+            }
+        }
+        listView.layoutManager = myLinearLayoutManager
+*/
+
         // Добавляем layoutManager через код
         //listView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         //listView.layoutManager = GridLayoutManager(this, SPAN_COUNT)
-        //listView.layoutManager = StaggeredGridLayoutManager(SPAN_COUNT, ORIENTATION)
+        //listView.layoutManager = StaggeredGridLayoutManager(SPAN_COUNT, STAGGERED_ORIENTATION)
 
         listView.recycledViewPool.setMaxRecycledViews(1, 15)
         listView.adapter = adapter
@@ -48,12 +69,15 @@ class MainActivity : AppCompatActivity() //, PhoneListener
         adapter.onItemActionClicked = {
             adapter.removeItem(it)
         }
-        adapter.setItems(fillList())
+        // Без DiffUtils
+        //adapter.setItems(fillList())
+        adapter.submitList(fillList())
     }
 
-    private fun fillList() : List<PhoneItem> {
-        val mutableList = mutableListOf<PhoneItem>()
-            for (i in 1..50) {
+    private fun fillList(): List<BaseItam> {
+        val mutableList = mutableListOf<BaseItam>()
+        for (i in 1..50) {
+            if (i % 3 != 0) {
                 val model = PhoneItem(
                     id = i,
                     model = "Apple Iphone $i",
@@ -65,17 +89,25 @@ class MainActivity : AppCompatActivity() //, PhoneListener
                     }
                 )
                 mutableList.add(model)
+            } else {
+                val model = TabletItem(
+                    id = i,
+                    model = "Apple Tab $i",
+                    age = 2000 + i,
+                )
+                mutableList.add(model)
             }
+        }
         return mutableList.toList()
     }
 
-/*
-    override fun onItemClicked(id: Int) {
-        Toast.makeText(this, "ID : $id", Toast.LENGTH_LONG).show()
-    }
+    /*
+        override fun onItemClicked(id: Int) {
+            Toast.makeText(this, "ID : $id", Toast.LENGTH_LONG).show()
+        }
 
-    override fun onItemActionClicked(position: Int) {
-        adapter.removeItem(position)
-    }
-*/
+        override fun onItemActionClicked(position: Int) {
+            adapter.removeItem(position)
+        }
+    */
 }
